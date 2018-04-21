@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class GuildConfigManager {
 
-    private static final Map<String, GuildConfig> configs = new HashMap<>();
+    private static final Map<Long, GuildConfig> configs = new HashMap<>();
     private File configDirectory;
 
     private static Logger logger = LogManager.getLogger(GuildConfigManager.class);
@@ -40,7 +40,7 @@ public class GuildConfigManager {
         for(File file : this.configDirectory.listFiles()){
             try{
                 GuildConfig guildConfig = mapper.readValue(file, GuildConfig.class);
-                GuildConfigManager.configs.put(file.getName(), guildConfig);
+                GuildConfigManager.configs.put(Long.valueOf(file.getName()), guildConfig);
             } catch (IOException e) {
                 logger.error("Config loading error : " + e.getMessage());
                 System.exit(-2);
@@ -50,13 +50,13 @@ public class GuildConfigManager {
         logger.debug(GuildConfigManager.configs);
     }
 
-    public boolean register(String channelId, GuildConfig config){
+    public boolean register(Long guildId, GuildConfig config){
         ObjectMapper mapper = new ObjectMapper();
-        File file = new File(this.configDirectory.getAbsolutePath() + File.separator + channelId);
+        File file = new File(this.configDirectory.getAbsolutePath() + File.separator + guildId);
 
         try {
             mapper.writeValue(file, config);
-            configs.put(channelId, config);
+            configs.put(guildId, config);
 
             logger.debug(configs.values());
 
@@ -67,7 +67,7 @@ public class GuildConfigManager {
         }
     }
 
-    public static GuildConfig get(String guildId){
+    public static GuildConfig get(Long guildId){
         return configs.get(guildId);
     }
 }

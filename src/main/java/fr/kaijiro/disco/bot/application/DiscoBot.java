@@ -22,12 +22,8 @@ public class DiscoBot {
         if(instance == null) {
             ClientBuilder clientBuilder = new ClientBuilder();
             clientBuilder.withToken(token);
-
-            try{
-                DiscoBot.instance = clientBuilder.login();
-            } catch(DiscordException ex){
-                ex.printStackTrace();
-            }
+            logger.info("Bot instance built");
+            return clientBuilder.build();
         }
 
         return DiscoBot.instance;

@@ -4,7 +4,7 @@ import fr.kaijiro.disco.bot.application.DiscoBot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.util.MessageBuilder;
 
 public class PingPongCommand implements IListener<MessageReceivedEvent> {

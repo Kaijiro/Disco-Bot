@@ -5,7 +5,6 @@ import fr.kaijiro.disco.bot.commands.PingPongCommand;
 import fr.kaijiro.disco.bot.configuration.ArgumentsParser;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
-import fr.kaijiro.disco.bot.listeners.UserStatusListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.IDiscordClient;
@@ -34,8 +33,13 @@ public class Main {
         DiscoBot.setToken(argumentsParser.get(DiscoBotOption.BOT_TOKEN));
 
         IDiscordClient client = DiscoBot.getInstance();
-        client.getDispatcher().registerListener(new UserStatusListener());
+
+        // TODO Create a method to register every command & listener : scan annotations in packages ?
         client.getDispatcher().registerListener(new PingPongCommand());
+        logger.info("PingPongCommand registered");
         client.getDispatcher().registerListener(new ConfigCommand());
+        logger.info("ConfigCommand registered");
+
+        client.login();
     }
 }

@@ -2,14 +2,14 @@ package fr.kaijiro.disco.bot.entities;
 
 public class GuildConfig {
 
-    private String logChannel;
+    private Long logChannel;
 
 
-    public String getLogChannel() {
+    public Long getLogChannel() {
         return logChannel;
     }
 
-    public void setLogChannel(String logChannel) {
+    public void setLogChannel(Long logChannel) {
         this.logChannel = logChannel;
     }
 }

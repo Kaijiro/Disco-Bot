@@ -9,13 +9,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 
 import java.nio.file.FileSystemException;
 
-// TODO Find a way to improve the registering of "simple" commands like this one (note : sdcf4j doesn't work)
 public class ConfigCommand implements IListener<MessageReceivedEvent> {
 
     private static Logger logger = LogManager.getLogger(ConfigCommand.class);
@@ -47,14 +46,14 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
                 try{
                     GuildConfigManager guildConfigManager = new GuildConfigManager(ArgumentsParser.get(DiscoBotOption.CONFIGURATION_DIRECTORY));
 
-                    GuildConfig config = GuildConfigManager.get(channel.getGuild().getID());
+                    GuildConfig config = GuildConfigManager.get(channel.getGuild().getLongID());
 
                     if(config == null){
                         config = new GuildConfig();
                     }
 
-                    config.setLogChannel(channel.getID());
-                    guildConfigManager.register(channel.getGuild().getID(), config);
+                    config.setLogChannel(channel.getLongID());
+                    guildConfigManager.register(channel.getGuild().getLongID(), config);
 
                     DiscoBot.sendMessage("Config registered !", message.getChannel());
                 }
