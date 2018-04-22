@@ -10,7 +10,7 @@ import java.util.Map;
 public class ArgumentsParser {
 
     private final Options options;
-    private static Map<DiscoBotOption, String> parametersMap;
+    private Map<DiscoBotOption, String> parametersMap;
 
     private static Logger logger = LogManager.getLogger(ArgumentsParser.class);
 
@@ -59,7 +59,11 @@ public class ArgumentsParser {
         }
     }
 
-    public static String get(DiscoBotOption key){
+    public String get(DiscoBotOption key){
         return parametersMap.get(key);
+    }
+
+    public Map<DiscoBotOption, String> getParametersMap(){
+        return this.parametersMap;
     }
 }

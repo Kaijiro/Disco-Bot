@@ -1,7 +1,8 @@
 package fr.kaijiro.disco.bot.commands;
 
+import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.application.DiscoBot;
-import fr.kaijiro.disco.bot.configuration.ArgumentsParser;
+import fr.kaijiro.disco.bot.application.Main;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
 import fr.kaijiro.disco.bot.entities.GuildConfig;
@@ -15,6 +16,7 @@ import sx.blah.discord.handle.obj.IMessage;
 
 import java.nio.file.FileSystemException;
 
+@Command
 public class ConfigCommand implements IListener<MessageReceivedEvent> {
 
     private static Logger logger = LogManager.getLogger(ConfigCommand.class);
@@ -29,7 +31,7 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
             if(parts.length == 3 && parts[1].equals("log")){
                 String channelName = parts[2];
 
-                IDiscordClient client = DiscoBot.getInstance();
+                IDiscordClient client = Main.BotInstance.get();
                 IChannel channel = null;
 
                 for(IChannel _channel : client.getChannels()){
@@ -44,7 +46,7 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
                 }
 
                 try{
-                    GuildConfigManager guildConfigManager = new GuildConfigManager(ArgumentsParser.get(DiscoBotOption.CONFIGURATION_DIRECTORY));
+                    GuildConfigManager guildConfigManager = new GuildConfigManager(Main.ApplicationConfiguration.get().get(DiscoBotOption.CONFIGURATION_DIRECTORY));
 
                     GuildConfig config = GuildConfigManager.get(channel.getGuild().getLongID());
 

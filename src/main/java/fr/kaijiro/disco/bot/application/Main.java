@@ -1,7 +1,5 @@
 package fr.kaijiro.disco.bot.application;
 
-import fr.kaijiro.disco.bot.commands.ConfigCommand;
-import fr.kaijiro.disco.bot.commands.PingPongCommand;
 import fr.kaijiro.disco.bot.configuration.ArgumentsParser;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
@@ -10,15 +8,23 @@ import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.IDiscordClient;
 
 import java.nio.file.FileSystemException;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
 
     private static Logger logger = LogManager.getLogger(Main.class);
 
+    public static AtomicReference<IDiscordClient> BotInstance = new AtomicReference<>();
+
+    public static AtomicReference<Map<DiscoBotOption, String >> ApplicationConfiguration = new AtomicReference<>();
+
+    // Don't forget to click there : https://discordapp.com/oauth2/authorize?client_id=233332037333811201&scope=bot&permissions=-1
     public static void main(String[] args) {
-        // Don't forget to click there : https://discordapp.com/oauth2/authorize?client_id=233332037333811201&scope=bot&permissions=-1
+        // Parse program arguments and format them into a map
         ArgumentsParser argumentsParser = new ArgumentsParser();
         argumentsParser.load(args);
+        Main.ApplicationConfiguration.set(argumentsParser.getParametersMap());
 
         // Check if folder exists, if not create. Check if writable.
         try {
@@ -30,16 +36,13 @@ public class Main {
             System.exit(-1);
         }
 
-        DiscoBot.setToken(argumentsParser.get(DiscoBotOption.BOT_TOKEN));
+        // Build bot instance
+        BotFactory factory = BotFactory.buildFactory(argumentsParser.getParametersMap());
+        IDiscordClient bot = factory.getBotInstance();
+        Main.BotInstance.set(bot);
 
-        IDiscordClient client = DiscoBot.getInstance();
-
-        // TODO Create a method to register every command & listener : scan annotations in packages ?
-        client.getDispatcher().registerListener(new PingPongCommand());
-        logger.info("PingPongCommand registered");
-        client.getDispatcher().registerListener(new ConfigCommand());
-        logger.info("ConfigCommand registered");
-
-        client.login();
+        // We're ready to go !
+        logger.info("DiscoBot ready to go !");
+        bot.login();
     }
 }

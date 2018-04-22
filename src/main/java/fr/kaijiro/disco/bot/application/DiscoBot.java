@@ -2,7 +2,6 @@ package fr.kaijiro.disco.bot.application;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.util.DiscordException;
@@ -14,35 +13,8 @@ public class DiscoBot {
 
     private static Logger logger = LogManager.getLogger(DiscoBot.class);
 
-    private static IDiscordClient instance = null;
-
-    private static String token = "";
-
-    public static IDiscordClient getInstance(String token) {
-        if(instance == null) {
-            ClientBuilder clientBuilder = new ClientBuilder();
-            clientBuilder.withToken(token);
-            logger.info("Bot instance built");
-            return clientBuilder.build();
-        }
-
-        return DiscoBot.instance;
-    }
-
-    public static IDiscordClient getInstance() {
-        return DiscoBot.getInstance(DiscoBot.getToken());
-    }
-
-    public static void setToken(String token){
-        DiscoBot.token = token;
-    }
-
-    public static String getToken(){
-        return DiscoBot.token;
-    }
-
     public static void sendMessage(String message, IChannel channel){
-        IDiscordClient client = DiscoBot.getInstance();
+        IDiscordClient client = Main.BotInstance.get();
 
         MessageBuilder builder = new MessageBuilder(client);
 
