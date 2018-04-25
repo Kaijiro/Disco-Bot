@@ -20,8 +20,8 @@ public class BotFactory {
 
     private static Logger logger = LogManager.getLogger(BotFactory.class);
 
-    public static BotFactory buildFactory(Map<DiscoBotOption, String> params){
-        return new BotFactory(params);
+    public static IDiscordClient buildBot(Map<DiscoBotOption, String> params){
+        return new BotFactory(params).getBotInstance();
     }
 
     private BotFactory(Map<DiscoBotOption, String> params){

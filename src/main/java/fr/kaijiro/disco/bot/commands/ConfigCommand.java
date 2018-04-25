@@ -1,7 +1,6 @@
 package fr.kaijiro.disco.bot.commands;
 
 import fr.kaijiro.disco.bot.annotations.Command;
-import fr.kaijiro.disco.bot.application.DiscoBot;
 import fr.kaijiro.disco.bot.application.Main;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
@@ -13,6 +12,8 @@ import sx.blah.discord.api.events.IListener;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.util.MessageBuilder;
+import sx.blah.discord.util.RequestBuffer;
 
 import java.nio.file.FileSystemException;
 
@@ -22,8 +23,9 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
     private static Logger logger = LogManager.getLogger(ConfigCommand.class);
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        IMessage message = messageReceivedEvent.getMessage();
+    public void handle(MessageReceivedEvent event) {
+        MessageBuilder builder = new MessageBuilder(event.getClient());
+        IMessage message = event.getMessage();
 
         if(message.getContent().startsWith("!config")){
             String[] parts = message.getContent().split(" ");
@@ -31,7 +33,7 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
             if(parts.length == 3 && parts[1].equals("log")){
                 String channelName = parts[2];
 
-                IDiscordClient client = Main.BotInstance.get();
+                IDiscordClient client = event.getClient();
                 IChannel channel = null;
 
                 for(IChannel _channel : client.getChannels()){
@@ -41,7 +43,11 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
                 }
 
                 if(channel == null){
-                    DiscoBot.sendMessage("Could not find channel " + channelName, message.getChannel());
+                    builder
+                        .withContent("Could not find channel " + channelName)
+                        .withChannel(event.getMessage().getChannel());
+
+                    RequestBuffer.request(builder::send);
                     return;
                 }
 
@@ -57,14 +63,21 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
                     config.setLogChannel(channel.getLongID());
                     guildConfigManager.register(channel.getGuild().getLongID(), config);
 
-                    DiscoBot.sendMessage("Config registered !", message.getChannel());
+                    builder
+                            .withContent("Config registered !")
+                            .withChannel(event.getMessage().getChannel());
+
+                    RequestBuffer.request(builder::send);
                 }
                 catch(FileSystemException ex){
                     logger.error("Error : " + ex.getMessage());
 
-                    DiscoBot.sendMessage("An error occured, please contact the developper.", message.getChannel());
-                }
+                    builder
+                            .withContent("An error occured, please contact the developper.")
+                            .withChannel(event.getMessage().getChannel());
 
+                    RequestBuffer.request(builder::send);
+                }
             }
         }
     }

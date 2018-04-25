@@ -4,7 +4,6 @@ public class GuildConfig {
 
     private Long logChannel;
 
-
     public Long getLogChannel() {
         return logChannel;
     }

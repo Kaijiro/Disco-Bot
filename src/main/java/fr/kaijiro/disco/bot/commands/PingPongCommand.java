@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.events.IListener;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.util.MessageBuilder;
+import sx.blah.discord.util.RequestBuffer;
 
 @Command
 public class PingPongCommand implements IListener<MessageReceivedEvent> {
@@ -15,13 +16,15 @@ public class PingPongCommand implements IListener<MessageReceivedEvent> {
 
     public void handle(MessageReceivedEvent event) {
         if(event.getMessage().getContent().equals("!ping")){
-            MessageBuilder builder = new MessageBuilder(Main.BotInstance.get());
+            MessageBuilder builder = new MessageBuilder(event.getClient());
 
-            builder
-                .withContent("pong !")
-                .withChannel(event.getMessage().getChannel());
+            RequestBuffer.request(() -> {
+                builder
+                        .withContent("pong !")
+                        .withChannel(event.getMessage().getChannel());
 
-            builder.send();
+                builder.send();
+            });
         }
     }
 }

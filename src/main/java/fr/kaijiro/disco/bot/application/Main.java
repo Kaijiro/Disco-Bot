@@ -15,8 +15,6 @@ public class Main {
 
     private static Logger logger = LogManager.getLogger(Main.class);
 
-    public static AtomicReference<IDiscordClient> BotInstance = new AtomicReference<>();
-
     public static AtomicReference<Map<DiscoBotOption, String >> ApplicationConfiguration = new AtomicReference<>();
 
     // Don't forget to click there : https://discordapp.com/oauth2/authorize?client_id=233332037333811201&scope=bot&permissions=-1
@@ -37,9 +35,7 @@ public class Main {
         }
 
         // Build bot instance
-        BotFactory factory = BotFactory.buildFactory(argumentsParser.getParametersMap());
-        IDiscordClient bot = factory.getBotInstance();
-        Main.BotInstance.set(bot);
+        IDiscordClient bot = BotFactory.buildBot(argumentsParser.getParametersMap());
 
         // We're ready to go !
         logger.info("DiscoBot ready to go !");
