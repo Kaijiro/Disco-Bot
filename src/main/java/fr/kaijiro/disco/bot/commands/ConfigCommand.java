@@ -16,7 +16,7 @@ import sx.blah.discord.util.RequestBuffer;
 
 import java.nio.file.FileSystemException;
 
-@Command(name = "!config")
+@Command("!config")
 public class ConfigCommand extends AbstractBotCommand {
 
     private static Logger logger = LogManager.getLogger(ConfigCommand.class);

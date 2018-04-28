@@ -7,23 +7,21 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.RequestBuffer;
 
-@Command(name="!ping")
+@Command(value = "!ping", aliases = {"!tic", "!youpla"})
 public class PingPongCommand extends AbstractBotCommand {
 
     private static Logger logger = LogManager.getLogger(PingPongCommand.class);
 
     @Override
     public void execute(MessageReceivedEvent event) {
-        if(event.getMessage().getContent().equals("!ping")){
-            MessageBuilder builder = new MessageBuilder(event.getClient());
+        MessageBuilder builder = new MessageBuilder(event.getClient());
 
-            RequestBuffer.request(() -> {
-                builder
-                        .withContent("pong !")
-                        .withChannel(event.getMessage().getChannel());
+        RequestBuffer.request(() -> {
+            builder
+                    .withContent("pong !")
+                    .withChannel(event.getMessage().getChannel());
 
-                builder.send();
-            });
-        }
+            builder.send();
+        });
     }
 }
