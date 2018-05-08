@@ -15,12 +15,12 @@ public class ArgumentsParser {
     private static Logger logger = LogManager.getLogger(ArgumentsParser.class);
 
     public ArgumentsParser(){
-        options = new Options();
+        this.options = new Options();
 
-        parametersMap = new EnumMap<>(DiscoBotOption.class);
+        this.parametersMap = new EnumMap<>(DiscoBotOption.class);
 
         for(DiscoBotOption discoBotOption : DiscoBotOption.values()){
-            options.addOption(
+            this.options.addOption(
                 Option.builder(discoBotOption.getTinyOpt())
                     .longOpt(discoBotOption.getLongOpt())
                     .hasArg(true)
@@ -39,13 +39,13 @@ public class ArgumentsParser {
             for(DiscoBotOption discoBotOption : DiscoBotOption.values()){
                 if(commandLine.hasOption(discoBotOption.getTinyOpt()) && discoBotOption == DiscoBotOption.HELP){
                     HelpFormatter helpFormatter = new HelpFormatter();
-                    helpFormatter.printHelp("disco-bot", options);
+                    helpFormatter.printHelp("disco-bot", this.options);
 
                     System.exit(1);
                 }
 
                 if(commandLine.hasOption(discoBotOption.getTinyOpt())){
-                    parametersMap.put(discoBotOption, commandLine.getOptionValue(discoBotOption.getTinyOpt()));
+                    this.parametersMap.put(discoBotOption, commandLine.getOptionValue(discoBotOption.getTinyOpt()));
                 }
             }
         }
@@ -60,7 +60,7 @@ public class ArgumentsParser {
     }
 
     public String get(DiscoBotOption key){
-        return parametersMap.get(key);
+        return this.parametersMap.get(key);
     }
 
     public Map<DiscoBotOption, String> getParametersMap(){
