@@ -1,5 +1,7 @@
 package fr.kaijiro.disco.bot.commands.parameters;
 
+import java.util.function.Function;
+
 public class Parameter {
     private String name;
 
@@ -8,6 +10,10 @@ public class Parameter {
     private boolean isOptional = true;
 
     private String defaultValue = "";
+
+    private Function<String, Boolean> validator;
+
+    private Class waitedType = String.class;
 
     public String getName() {
         return name;
@@ -45,6 +51,26 @@ public class Parameter {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    public Parameter validatedWith(Function<String, Boolean> validator){
+        this.validator = validator;
+
+        return this;
+    }
+
+    public Function<String, Boolean> getValidator(){
+        return this.validator;
+    }
+
+    public Class getWaitedType() {
+        return waitedType;
+    }
+
+    public Parameter waitedType(Class waitedType) {
+        this.waitedType = waitedType;
+
+        return this;
     }
 
     public static Parameter build(String name){

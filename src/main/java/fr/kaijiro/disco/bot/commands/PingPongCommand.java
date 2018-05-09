@@ -17,7 +17,13 @@ public class PingPongCommand extends AbstractBotCommand {
 
     @Override
     public List<Parameter> getParameters() {
-        this.parameters.add(Parameter.build("times").isOptional(false).hasArg(true));
+        this.parameters.add(
+                Parameter.build("times")
+                        .isOptional(false)
+                        .hasArg(true)
+                        .waitedType(Integer.class)
+                        .validatedWith(e -> Integer.valueOf(e) > 0 && Integer.valueOf(e) < 10)
+        );
 
         return this.parameters;
     }
@@ -39,7 +45,7 @@ public class PingPongCommand extends AbstractBotCommand {
 
     @Override
     public void formatHelp(MessageBuilder builder) {
-        builder.appendContent("Pour utiliser cette commande voici le format à suivre : `!ping <times>`, `<times>`" +
+        builder.appendContent("Pour utiliser cette commande voici le format à suivre : `!ping <times>`, `<times>` " +
                 "étant le nombre de fois que le bot doit répondre");
     }
 }

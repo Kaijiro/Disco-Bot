@@ -1,5 +1,6 @@
 package fr.kaijiro.disco.bot.commands.parameters;
 
+import fr.kaijiro.disco.bot.commands.parameters.exceptions.IncorrectValueException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingParameterException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingValueException;
 import org.apache.commons.lang3.ArrayUtils;
@@ -12,7 +13,7 @@ public class DiscoCommandParser {
 
     private Map<String, String> parameterMap;
 
-    public Map<String, String> parse(String cmd, List<Parameter> params) throws MissingValueException, MissingParameterException {
+    public Map<String, String> parse(String cmd, List<Parameter> params) throws MissingValueException, MissingParameterException, IncorrectValueException {
         String[] cmdElements = cmd.split(" ");
         // Drop the first part the command, it's only the name
         cmdElements = ArrayUtils.subarray(cmdElements, 1, cmdElements.length);
@@ -36,7 +37,7 @@ public class DiscoCommandParser {
                 // Is it a mandatory param ?
                 Parameter _param = params.get(i);
 
-                this.parameterMap.put(_param.getName(), cmdElements[i]);
+                this.affectParam(_param, cmdElements[i]);
             }
 
             for(Parameter param : params){
@@ -47,9 +48,9 @@ public class DiscoCommandParser {
                         if(i + 1 == cmdElements.length)
                             throw new MissingValueException();
                         else
-                            this.parameterMap.put(param.getName(), cmdElements[++i]);
+                            this.affectParam(param, cmdElements[++i]);
                     } else {
-                        this.parameterMap.put(param.getName(), "");
+                        this.affectParam(param, "");
                     }
                 }
             }
@@ -62,6 +63,47 @@ public class DiscoCommandParser {
         }
 
         return this.parameterMap;
+    }
+
+    private void affectParam(Parameter param, String value) throws IncorrectValueException {
+        if(param.getValidator() != null) {
+            // Execute type check before validation rule
+            switch(param.getWaitedType().getSimpleName()){
+                case "String":
+                    break;
+                case "Integer":
+                    try{ Integer.valueOf(value); }
+                    catch (NumberFormatException e){
+                        throw new IncorrectValueException("La valeur \"" + value + "\" pour le paramètre \"" + param.getName() + "\" n'est pas valide");
+                    }
+                    break;
+                case "Float":
+                    try{ Float.valueOf(value); }
+                    catch (NumberFormatException e){
+                        throw new IncorrectValueException("La valeur \"" + value + "\" pour le paramètre \"" + param.getName() + "\" n'est pas valide");
+                    }
+                    break;
+                case "Double":
+                    try{ Double.valueOf(value); }
+                    catch (NumberFormatException e){
+                        throw new IncorrectValueException("La valeur \"" + value + "\" pour le paramètre \"" + param.getName() + "\" n'est pas valide");
+                    }
+                    break;
+                case "Boolean":
+                    if(value.equals("true") || value.equals("false"))
+                        break;
+                    else
+                        throw new IncorrectValueException("La valeur \"" + value + "\" pour le paramètre \"" + param.getName() + "\" n'est pas valide");
+
+                default: break;
+            }
+
+            // Execute parameter validation to check if the value is correct
+            if (!param.getValidator().apply(value))
+                throw new IncorrectValueException("La valeur \"" + value + "\" pour le paramètre \"" + param.getName() + "\" n'est pas valide");
+        }
+
+        this.parameterMap.put(param.getName(), value);
     }
 
     public DiscoCommandParser(){

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.DiscoCommandParser;
 import fr.kaijiro.disco.bot.commands.parameters.Parameter;
+import fr.kaijiro.disco.bot.commands.parameters.exceptions.IncorrectValueException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingParameterException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingValueException;
 import org.apache.logging.log4j.LogManager;
@@ -39,10 +40,11 @@ public abstract class AbstractBotCommand implements IListener<MessageReceivedEve
                 // Check if parameters are well formatted
                 Map<String, String> params = this.checkCommandArgs();
                 this.execute(params);
-            } catch(MissingParameterException | MissingValueException e) {
+            } catch(MissingParameterException | MissingValueException | IncorrectValueException e) {
                 RequestBuffer.request(() -> {
                     MessageBuilder builder = new MessageBuilder(this.event.getClient());
-                    builder.withContent(e.getMessage());
+                    builder.withChannel(this.event.getChannel());
+                    builder.withContent(e.getMessage() + "\n");
                     this.formatHelp(builder);
                     builder.send();
                 });
@@ -65,7 +67,7 @@ public abstract class AbstractBotCommand implements IListener<MessageReceivedEve
         return this.getClass().getAnnotation(Command.class).value();
     }
 
-    private Map<String, String> checkCommandArgs() throws MissingValueException, MissingParameterException {
+    private Map<String, String> checkCommandArgs() throws MissingValueException, MissingParameterException, IncorrectValueException {
         String cmdSent = this.event.getMessage().getContent();
         DiscoCommandParser parser = new DiscoCommandParser();
 
