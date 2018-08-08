@@ -8,22 +8,21 @@ import fr.kaijiro.disco.bot.entities.GuildConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.RequestBuffer;
 
 import java.nio.file.FileSystemException;
+import java.util.Map;
 
-@Command
-public class ConfigCommand implements IListener<MessageReceivedEvent> {
+@Command("!config")
+public class ConfigCommand extends AbstractBotCommand {
 
     private static Logger logger = LogManager.getLogger(ConfigCommand.class);
 
     @Override
-    public void handle(MessageReceivedEvent event) {
+    public void execute(Map<String, String> parameters) {
         MessageBuilder builder = new MessageBuilder(event.getClient());
         IMessage message = event.getMessage();
 
@@ -80,5 +79,10 @@ public class ConfigCommand implements IListener<MessageReceivedEvent> {
                 }
             }
         }
+    }
+
+    @Override
+    public void formatHelp(MessageBuilder builder) {
+
     }
 }

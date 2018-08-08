@@ -1,30 +1,51 @@
 package fr.kaijiro.disco.bot.commands;
 
 import fr.kaijiro.disco.bot.annotations.Command;
-import fr.kaijiro.disco.bot.application.Main;
+import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.RequestBuffer;
 
-@Command
-public class PingPongCommand implements IListener<MessageReceivedEvent> {
+import java.util.List;
+import java.util.Map;
+
+@Command(value = "!ping", aliases = {"!gnip"})
+public class PingPongCommand extends AbstractBotCommand {
 
     private static Logger logger = LogManager.getLogger(PingPongCommand.class);
 
-    public void handle(MessageReceivedEvent event) {
-        if(event.getMessage().getContent().equals("!ping")){
-            MessageBuilder builder = new MessageBuilder(event.getClient());
+    @Override
+    public List<Parameter> getParameters() {
+        this.parameters.add(
+                Parameter.build("times")
+                        .isOptional(false)
+                        .hasArg(true)
+                        .waitedType(Integer.class)
+                        .validatedWith(e -> Integer.valueOf(e) > 0 && Integer.valueOf(e) < 10)
+        );
 
+        return this.parameters;
+    }
+
+    @Override
+    public void execute(Map<String, String> parameters) {
+        MessageBuilder builder = new MessageBuilder(this.event.getClient());
+
+        for(int i = 0 ; i < Integer.parseInt(parameters.get("times")) ; i++) {
             RequestBuffer.request(() -> {
                 builder
                         .withContent("pong !")
-                        .withChannel(event.getMessage().getChannel());
+                        .withChannel(this.event.getChannel());
 
                 builder.send();
             });
         }
+    }
+
+    @Override
+    public void formatHelp(MessageBuilder builder) {
+        builder.appendContent("Pour utiliser cette commande voici le format à suivre : `!ping <times>`, `<times>` " +
+                "étant le nombre de fois que le bot doit répondre");
     }
 }

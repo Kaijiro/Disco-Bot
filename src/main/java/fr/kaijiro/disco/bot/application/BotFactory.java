@@ -52,7 +52,7 @@ public class BotFactory {
             this.botInstance.getDispatcher().registerListener(c.newInstance());
             logger.info(c.getSimpleName() + " registered");
         } catch (InstantiationException | IllegalAccessException ex) {
-            logger.error("Could not register " + c.getSimpleName() + " : " + ex.getMessage());
+            logger.error("Could not register " + c.getSimpleName() + " : " + ex.getMessage(), ex);
         }
     }
 
