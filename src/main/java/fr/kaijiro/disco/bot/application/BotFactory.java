@@ -1,15 +1,16 @@
 package fr.kaijiro.disco.bot.application;
 
+import fr.kaijiro.disco.bot.configuration.exceptions.ValueNotSetException;
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.annotations.Listener;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
+import fr.kaijiro.disco.bot.configuration.SystemEnv;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 
-import java.util.Map;
 import java.util.Set;
 
 public class BotFactory {
@@ -20,12 +21,17 @@ public class BotFactory {
 
     private static Logger logger = LogManager.getLogger(BotFactory.class);
 
-    public static IDiscordClient buildBot(Map<DiscoBotOption, String> params){
-        return new BotFactory(params).getBotInstance();
+    public static IDiscordClient buildBot(){
+        return new BotFactory().getBotInstance();
     }
 
-    private BotFactory(Map<DiscoBotOption, String> params){
-        this.token = params.get(DiscoBotOption.BOT_TOKEN);
+    private BotFactory(){
+        try {
+            this.token = SystemEnv.getOrThrow(DiscoBotOption.BOT_TOKEN);
+        } catch (ValueNotSetException e) {
+            BotFactory.logger.error(e.getMessage());
+            System.exit(-1);
+        }
 
         this.build();
     }

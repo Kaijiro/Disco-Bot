@@ -1,41 +1,37 @@
 package fr.kaijiro.disco.bot.application;
 
-import fr.kaijiro.disco.bot.configuration.ArgumentsParser;
+import fr.kaijiro.disco.bot.configuration.exceptions.ValueNotSetException;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
+import fr.kaijiro.disco.bot.configuration.SystemEnv;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sx.blah.discord.api.IDiscordClient;
 
 import java.nio.file.FileSystemException;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
 
     private static Logger logger = LogManager.getLogger(Main.class);
 
-    public static AtomicReference<Map<DiscoBotOption, String >> ApplicationConfiguration = new AtomicReference<>();
-
     // Don't forget to click there : https://discordapp.com/oauth2/authorize?client_id=233332037333811201&scope=bot&permissions=-1
     public static void main(String[] args) {
-        // Parse program arguments and format them into a map
-        ArgumentsParser argumentsParser = new ArgumentsParser();
-        argumentsParser.load(args);
-        Main.ApplicationConfiguration.set(argumentsParser.getParametersMap());
-
         // Check if folder exists, if not create. Check if writable.
         try {
-            GuildConfigManager guildConfigManager = new GuildConfigManager(argumentsParser.get(DiscoBotOption.CONFIGURATION_DIRECTORY));
+            GuildConfigManager guildConfigManager = new GuildConfigManager(SystemEnv.getOrThrow(DiscoBotOption.CONFIGURATION_DIRECTORY));
             guildConfigManager.load();
         }
         catch(FileSystemException ex){
             logger.error("Error with the configurations directory : " + ex.getMessage());
             System.exit(-1);
         }
+        catch(ValueNotSetException ex){
+            Main.logger.error(ex.getMessage());
+            System.exit(-1);
+        }
 
         // Build bot instance
-        IDiscordClient bot = BotFactory.buildBot(argumentsParser.getParametersMap());
+        IDiscordClient bot = BotFactory.buildBot();
 
         // We're ready to go !
         logger.info("DiscoBot ready to go !");

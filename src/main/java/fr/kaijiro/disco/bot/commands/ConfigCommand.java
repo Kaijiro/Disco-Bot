@@ -4,6 +4,7 @@ import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.application.Main;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
+import fr.kaijiro.disco.bot.configuration.SystemEnv;
 import fr.kaijiro.disco.bot.entities.GuildConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +52,7 @@ public class ConfigCommand extends AbstractBotCommand {
                 }
 
                 try{
-                    GuildConfigManager guildConfigManager = new GuildConfigManager(Main.ApplicationConfiguration.get().get(DiscoBotOption.CONFIGURATION_DIRECTORY));
+                    GuildConfigManager guildConfigManager = new GuildConfigManager(SystemEnv.getOrNull(DiscoBotOption.CONFIGURATION_DIRECTORY));
 
                     GuildConfig config = GuildConfigManager.get(channel.getGuild().getLongID());
 
