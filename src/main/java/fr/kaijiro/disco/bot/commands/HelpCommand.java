@@ -1,10 +1,15 @@
 package fr.kaijiro.disco.bot.commands;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reflections.Reflections;
 
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.Parameter;
@@ -25,9 +30,18 @@ public class HelpCommand extends AbstractBotCommand {
     public void execute(Map<String, String> parameters) {
         MessageBuilder builder = new MessageBuilder(this.event.getClient());
 
+        Reflections reflections = new Reflections("fr.kaijiro.disco.bot.commands");
+        Set<Class<? extends AbstractBotCommand>> classes = reflections.getSubTypesOf(AbstractBotCommand.class);
+
+        List<String> commandNames = classes.stream()
+                .map(c -> Arrays.asList(c.getAnnotationsByType(Command.class)))
+                .flatMap(List::stream)
+                .map(Command::value)
+                .collect(Collectors.toList());
+
         RequestBuffer.request(() -> {
             builder
-                    .withContent("test !")
+                    .withContent("Les commandes disponibles sont les suivantes : \n\n" + StringUtils.join(commandNames, "\n"))
                     .withChannel(this.event.getChannel());
 
             builder.send();
