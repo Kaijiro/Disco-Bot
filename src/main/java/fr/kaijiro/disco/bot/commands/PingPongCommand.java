@@ -1,18 +1,13 @@
 package fr.kaijiro.disco.bot.commands;
 
-import java.util.List;
-import java.util.Map;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 
+import java.util.List;
+import java.util.Map;
+
 @Command(value = "!ping", aliases = {"!gnip"})
 public class PingPongCommand extends AbstractBotCommand {
-
-    private static Logger logger = LogManager.getLogger(PingPongCommand.class);
 
     @Override
     public List<Parameter> getParameters() {
@@ -29,7 +24,6 @@ public class PingPongCommand extends AbstractBotCommand {
 
     @Override
     public void execute(Map<String, String> parameters) {
-
         for(int i = 0 ; i < Integer.parseInt(parameters.get("times")) ; i++) {
             this.respond("Pong !");
         }

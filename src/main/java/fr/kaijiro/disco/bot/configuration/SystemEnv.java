@@ -1,12 +1,11 @@
 package fr.kaijiro.disco.bot.configuration;
 
 import fr.kaijiro.disco.bot.configuration.exceptions.ValueNotSetException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class SystemEnv {
 
-    private static Logger logger = LogManager.getLogger(SystemEnv.class);
+    private SystemEnv() {
+    }
 
     public static String getOrNull(String key){
         return System.getenv(key.toUpperCase());

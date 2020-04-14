@@ -1,19 +1,18 @@
 package fr.kaijiro.disco.bot.application;
 
-import java.nio.file.FileSystemException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import discord4j.core.DiscordClient;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.GuildConfigManager;
 import fr.kaijiro.disco.bot.configuration.SystemEnv;
 import fr.kaijiro.disco.bot.configuration.exceptions.ValueNotSetException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.nio.file.FileSystemException;
 
 public class Main {
 
-    private static Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger logger = LogManager.getLogger(Main.class);
 
     // Don't forget to click there : https://discordapp.com/oauth2/authorize?client_id=699635381192097824&scope=bot&permissions=-1
     public static void main(String[] args) {
@@ -23,11 +22,11 @@ public class Main {
             guildConfigManager.load();
         }
         catch(FileSystemException ex){
-            logger.error("Error with the configurations directory : " + ex.getMessage());
+            logger.error("Error with the configurations directory : {}", ex.getMessage());
             System.exit(-1);
         }
         catch(ValueNotSetException ex){
-            Main.logger.error(ex.getMessage());
+            logger.error(ex.getMessage());
             System.exit(-1);
         }
 

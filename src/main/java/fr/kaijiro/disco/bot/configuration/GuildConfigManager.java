@@ -14,9 +14,9 @@ import java.util.Map;
 public class GuildConfigManager {
 
     private static final Map<Long, GuildConfig> configs = new HashMap<>();
-    private File configDirectory;
+    private final File configDirectory;
 
-    private static Logger logger = LogManager.getLogger(GuildConfigManager.class);
+    private static final Logger logger = LogManager.getLogger(GuildConfigManager.class);
 
     public GuildConfigManager(String configPath) throws FileSystemException {
         this.configDirectory = new File(configPath);
@@ -42,7 +42,7 @@ public class GuildConfigManager {
                 GuildConfig guildConfig = mapper.readValue(file, GuildConfig.class);
                 GuildConfigManager.configs.put(Long.valueOf(file.getName()), guildConfig);
             } catch (IOException e) {
-                logger.error("Config loading error : " + e.getMessage());
+                logger.error("Config loading error : {}", e.getMessage());
                 System.exit(-2);
             }
         }
@@ -62,7 +62,7 @@ public class GuildConfigManager {
 
             return true;
         } catch (IOException e) {
-            logger.error("Config write error : " + e.getMessage());
+            logger.error("Config write error : {}", e.getMessage());
             return false;
         }
     }

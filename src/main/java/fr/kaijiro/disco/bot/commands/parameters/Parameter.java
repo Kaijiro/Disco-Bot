@@ -1,6 +1,6 @@
 package fr.kaijiro.disco.bot.commands.parameters;
 
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Parameter {
     private String name;
@@ -11,9 +11,9 @@ public class Parameter {
 
     private String defaultValue = "";
 
-    private Function<String, Boolean> validator;
+    private Predicate<String> validator;
 
-    private Class waitedType = String.class;
+    private Class<?> waitedType = String.class;
 
     public String getName() {
         return name;
@@ -53,21 +53,21 @@ public class Parameter {
         this.defaultValue = defaultValue;
     }
 
-    public Parameter validatedWith(Function<String, Boolean> validator){
+    public Parameter validatedWith(Predicate<String> validator) {
         this.validator = validator;
 
         return this;
     }
 
-    public Function<String, Boolean> getValidator(){
+    public Predicate<String> getValidator() {
         return this.validator;
     }
 
-    public Class getWaitedType() {
+    public Class<?> getWaitedType() {
         return waitedType;
     }
 
-    public Parameter waitedType(Class waitedType) {
+    public Parameter waitedType(Class<?> waitedType) {
         this.waitedType = waitedType;
 
         return this;

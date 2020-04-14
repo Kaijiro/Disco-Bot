@@ -1,14 +1,6 @@
 package fr.kaijiro.disco.bot.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.Lists;
-
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.DiscoCommandParser;
@@ -16,45 +8,52 @@ import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.IncorrectValueException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingParameterException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingValueException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractBotCommand {
 
     protected MessageCreateEvent event;
-
     protected List<Parameter> parameters = new ArrayList<>();
-
-    private static Logger logger = LogManager.getLogger(AbstractBotCommand.class);
+    protected final Logger logger = LogManager.getLogger(this.getClass());
 
     public void handle(MessageCreateEvent event) {
         this.event = event;
-        // Check if the message contains a command
-        String commandName = this.getClass().getAnnotation(Command.class).value();
-        String[] aliases = this.getClass().getAnnotation(Command.class).aliases();
 
-        List<String> aliasList = Lists.newArrayList(aliases);
+        String message = event.getMessage().getContent().orElse("");
 
-        String msg = event.getMessage().getContent().orElse("");
-
-        if(msg.startsWith(commandName) || aliasList.stream().anyMatch(e -> !e.isEmpty() && msg.startsWith(e))){
-            try{
+        if (commandShouldBeInvoked(message)) {
+            try {
                 // Check if parameters are well formatted
                 Map<String, String> params = this.checkCommandArgs();
                 this.execute(params);
-            } catch(MissingParameterException | MissingValueException | IncorrectValueException e) {
-                logger.error(e.getMessage(), e);
-                this.respond(e.getMessage() + "\n");
-            } catch(Exception e){
+            } catch (MissingParameterException | MissingValueException | IncorrectValueException e) {
+                logger.error(e.getMessage());
+                this.formatHelp();
+            } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 this.respond("An error happened ! Check the logs or contact the devs ....");
             }
         }
     }
 
-    public List<Parameter> getParameters(){
+    private boolean commandShouldBeInvoked(String message) {
+        String commandName = this.getClass().getAnnotation(Command.class).value();
+        ArrayList<String> aliases = Lists.newArrayList(this.getClass().getAnnotation(Command.class).aliases());
+        boolean messageUseAnyAlias = aliases.stream().anyMatch(e -> !e.isEmpty() && message.startsWith(e));
+
+        return message.startsWith(commandName) || messageUseAnyAlias;
+    }
+
+    public List<Parameter> getParameters() {
         return this.parameters;
     }
 
-    public String getCommandNameShort(){
+    public String getCommandNameShort() {
         return this.getClass().getAnnotation(Command.class).value();
     }
 
@@ -65,11 +64,13 @@ public abstract class AbstractBotCommand {
         return parser.parse(cmdSent, this.getParameters());
     }
 
+    public void respond(String msg) {
+        this.event.getMessage()
+                .getChannel()
+                .subscribe(messageChannel -> messageChannel.createMessage(msg).subscribe());
+    }
+
     public abstract void execute(Map<String, String> parameters);
 
     public abstract void formatHelp();
-
-    public void respond(String msg) {
-        this.event.getMessage().getChannel().block().createMessage(msg).block();
-    }
 }
