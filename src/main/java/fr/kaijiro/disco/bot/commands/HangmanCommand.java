@@ -1,12 +1,5 @@
 package fr.kaijiro.disco.bot.commands;
 
-import fr.kaijiro.disco.bot.annotations.Command;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.util.MessageBuilder;
-
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashSet;
@@ -14,6 +7,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import fr.kaijiro.disco.bot.annotations.Command;
 
 @Command(value = "!hangman", aliases = {"!pendu"})
 public class HangmanCommand extends AbstractBotCommand {
@@ -41,91 +41,81 @@ public class HangmanCommand extends AbstractBotCommand {
     @Override
     public void execute(Map<String, String> parameters) {
 
-        String message = event.getMessage().getContent().toLowerCase();
+        String message = this.event.getMessage().getContent().orElse("").toLowerCase();
         String[] args = message.split(" ");
 
 
         if(args.length < 2) {
-            handleErrorNbArgs(event);
+            this.handleErrorNbArgs(this.event);
             return;
         }
 
         if(!args[1].equals(COMMAND_START) && !gameStarted) {
-            handleStatusOption(event);
+            this.handleStatusOption(this.event);
         }
 
         switch(args[1]) {
             case COMMAND_START :
-                handleStartOption(event);
+                this.handleStartOption(this.event);
                 break;
 
             case COMMAND_STATUS :
-                handleStatusOption(event);
+                this.handleStatusOption(this.event);
                 break;
 
             case COMMAND_TRY:
                 if(args.length < 3) {
-                    handleErrorNbArgs(event);
+                    this.handleErrorNbArgs(this.event);
                     return;
                 } else {
-                    handleTryOption(event, args[2]);
+                    this.handleTryOption(this.event, args[2]);
                 }
                 break;
             case COMMAND_GUESS:
-                handleGuessOption(event, args);
+                this.handleGuessOption(this.event, args);
                 break;
             default :
-                handleErrorNbArgs(event);
+                this.handleErrorNbArgs(this.event);
                 return;
         }
     }
 
     @Override
-    public void formatHelp(MessageBuilder builder) {
+    public void formatHelp() {
 
     }
 
-    private void handleStartOption(MessageReceivedEvent event) {
-        MessageBuilder builder = new MessageBuilder(event.getClient());
+    private void handleStartOption(MessageCreateEvent event) {
         if(gameStarted) {
-            builder.withContent("A game is already started !\n" +
-                    "Type " + COMMAND_STATUS + " to display letters tryed and current game status.")
-                    .withChannel(event.getMessage().getChannel())
-                    .send();
+            this.respond("A game is already started !\n" +
+                    "Type " + COMMAND_STATUS + " to display letters tryed and current game status.");
         } else {
             do {
-                wordToGuess = getNewWordToGuess();
-            } while(wordToGuess.contains("%"));
+                this.wordToGuess = this.getNewWordToGuess();
+            } while(this.wordToGuess.contains("%"));
             triedLetters.clear();
             triedLetters.add(SPACE);
             gameStarted = true;
-            livesLeft = 5;
-            builder.withContent("A new game has been started ! \n\n" +
-                    getGameStatus())
-                    .withChannel(event.getMessage().getChannel())
-                    .send();
+            this.livesLeft = 5;
+            this.respond("A new game has been started ! \n\n" +
+                    this.getGameStatus());
         }
     }
 
-    private void handleStatusOption(MessageReceivedEvent event) {
-        MessageBuilder builder = new MessageBuilder(event.getClient());
+    private void handleStatusOption(MessageCreateEvent event) {
         String content;
 
         if(gameStarted) {
-            content = getGameStatus();
+            content = this.getGameStatus();
         } else {
             content = "No game started for now, start one with : \n" +
                     "`" + this.getCommandNameShort() + " " + COMMAND_START + "`";
         }
 
-        builder.withContent(content)
-                .withChannel(event.getMessage().getChannel())
-                .send();
+        this.respond(content);
     }
 
-    private void handleTryOption(MessageReceivedEvent event, String try_) {
-        MessageBuilder builder = new MessageBuilder(event.getClient());
-
+    private void handleTryOption(MessageCreateEvent event, String try_) {
         Pattern pattern = Pattern.compile("^[a-z1-9]{1}$");
         Matcher matcher = pattern.matcher(try_);
 
@@ -135,38 +125,34 @@ public class HangmanCommand extends AbstractBotCommand {
             content = "You tried : " + try_;
             if(triedLetters.contains(try_)) { // If user already tried this letter/number
                 content += "\n" + "Unfortunately it was already used. -1 live";
-                livesLeft -= 1;
-            } else if (!wordToGuess.contains(try_)) { // If the letter/number is not in the word to try_
+                this.livesLeft -= 1;
+            } else if (!this.wordToGuess.contains(try_)) { // If the letter/number is not in the word to try_
                 content += "\n" + "Unfortunatly it is not in the word to guess !";
                 triedLetters.add(try_);
-                livesLeft -= 1;
+                this.livesLeft -= 1;
 
             } else { // If the letter/number is in the word to try_
                 triedLetters.add(try_);
             }
-            content += "\n" + getGameStatus();
+            content += "\n" + this.getGameStatus();
         } else { // Not a letter or a number
-            livesLeft -= 1;
-            content = "Error, expecting a letter or a number ! -1 live \n" + getGameStatus();
+            this.livesLeft -= 1;
+            content = "Error, expecting a letter or a number ! -1 live \n" + this.getGameStatus();
         }
 
-        if(testIfFoundWord()) { // Check if user found the word
-            content += "\n" + "Congratulation ! You found the word " + wordToGuess;
+        if(this.testIfFoundWord()) { // Check if user found the word
+            content += "\n" + "Congratulation ! You found the word " + this.wordToGuess;
             gameStarted = false;
         }
 
-        builder.withContent(content)
-                .withChannel(event.getMessage().getChannel())
-                .send();
+        this.respond(content);
 
-        if(livesLeft == 0) { // Game lost - No lives left
-            handleGameLost(event);
+        if(this.livesLeft == 0) { // Game lost - No lives left
+            this.handleGameLost(event);
         }
     }
 
-    private void handleGuessOption(MessageReceivedEvent event, String[] args) {
-        MessageBuilder builder = new MessageBuilder(event.getClient());
-
+    private void handleGuessOption(MessageCreateEvent event, String[] args) {
         String guess = "";
         for (int i = 2; i < args.length; i++) {
             guess += args[i] + SPACE;
@@ -174,37 +160,30 @@ public class HangmanCommand extends AbstractBotCommand {
         guess = guess.trim();
 
         String content;
-        if(wordToGuess.equals(guess)) {
-            content = "Congratulations, you guessed the word " + wordToGuess;
+        if(this.wordToGuess.equals(guess)) {
+            content = "Congratulations, you guessed the word " + this.wordToGuess;
             gameStarted = false;
         } else {
             content = "Humm no, the word to guess is not " + guess + "... -1 live";
-            livesLeft -= 1;
+            this.livesLeft -= 1;
         }
 
-        builder.withContent(content)
-                .withChannel(event.getMessage().getChannel())
-                .send();
+        this.respond(content);
 
-        if(livesLeft == 0) { // Game lost - No lives left
-            handleGameLost(event);
+        if(this.livesLeft == 0) { // Game lost - No lives left
+            this.handleGameLost(event);
         }
     }
 
-    private void handleErrorNbArgs(MessageReceivedEvent event) {
-        MessageBuilder builder = new MessageBuilder(event.getClient());
-        builder.withContent(":warning:  Error, to play a Hangman game, I wait 2 parameters ! :warning: \n\n" +
+    private void handleErrorNbArgs(MessageCreateEvent event) {
+        this.respond(":warning:  Error, to play a Hangman game, I wait 2 parameters ! :warning: \n\n" +
                 "`" + this.getCommandNameShort() + " ( " +COMMAND_START + " | " + COMMAND_STATUS + " | " + COMMAND_TRY + " + 1 letter | " + COMMAND_GUESS + " + your guess )`\n\n" +
-                "Try again ! :wink:")
-                .withChannel(event.getMessage().getChannel())
-                .send();
+                "Try again ! :wink:");
     }
 
-    private void handleGameLost(MessageReceivedEvent event) {
-        MessageBuilder builder = new MessageBuilder(event.getClient());
-
+    private void handleGameLost(MessageCreateEvent event) {
         String content = "No more life left !\n" +
-                "You have not guessed the word " + wordToGuess + "\n" +
+                "You have not guessed the word " + this.wordToGuess + "\n" +
                 "You used those letters : ";
         for (String s : triedLetters) {
             content += s + " ";
@@ -213,13 +192,11 @@ public class HangmanCommand extends AbstractBotCommand {
 
         gameStarted = false;
 
-        builder.withContent(content)
-                .withChannel(event.getMessage().getChannel())
-                .send();
+        this.respond(content);
     }
 
     private boolean testIfFoundWord() {
-        for (String s : wordToGuess.split("")) {
+        for (String s : this.wordToGuess.split("")) {
             if(!triedLetters.contains(s)) {
                 return false;
             }
@@ -230,7 +207,7 @@ public class HangmanCommand extends AbstractBotCommand {
     public String getNewWordToGuess() {
         String out = "test";
         try {
-            out = correctWord(sendGet());
+            out = correctWord(this.sendGet());
         } catch(Exception e) {
             logger.error("Error while getting the new word to guess", e);
         }
@@ -241,14 +218,14 @@ public class HangmanCommand extends AbstractBotCommand {
     }
 
     public String getGameStatus() {
-        return "Live" + (livesLeft>1?"s":"") + " left : " + livesLeft + "\n" +
-                getWordToGuessForDisplay() ;
+        return "Live" + (this.livesLeft >1?"s":"") + " left : " + this.livesLeft + "\n" +
+                this.getWordToGuessForDisplay() ;
     }
 
     public String getWordToGuessForDisplay() {
         String out = "";
 
-        for (String s : wordToGuess.split("")) {
+        for (String s : this.wordToGuess.split("")) {
             if(triedLetters.contains(s)) {
                 out += s;
             } else {
