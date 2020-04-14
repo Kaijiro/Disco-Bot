@@ -1,33 +1,31 @@
 package fr.kaijiro.disco.bot.commands;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Lists;
+
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.DiscoCommandParser;
 import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.IncorrectValueException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingParameterException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingValueException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.util.MessageBuilder;
-import sx.blah.discord.util.RequestBuffer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+public abstract class AbstractBotCommand {
 
-public abstract class AbstractBotCommand implements IListener<MessageReceivedEvent> {
-
-    protected MessageReceivedEvent event;
+    protected MessageCreateEvent event;
 
     protected List<Parameter> parameters = new ArrayList<>();
 
     private static Logger logger = LogManager.getLogger(AbstractBotCommand.class);
 
-    @Override
-    public void handle(MessageReceivedEvent event) {
+    public void handle(MessageCreateEvent event) {
         this.event = event;
         // Check if the message contains a command
         String commandName = this.getClass().getAnnotation(Command.class).value();
@@ -35,26 +33,19 @@ public abstract class AbstractBotCommand implements IListener<MessageReceivedEve
 
         List<String> aliasList = Lists.newArrayList(aliases);
 
-        if(event.getMessage().getContent().startsWith(commandName) || aliasList.stream().anyMatch(e -> !e.isEmpty() && event.getMessage().getContent().startsWith(e))){
+        String msg = event.getMessage().getContent().orElse("");
+
+        if(msg.startsWith(commandName) || aliasList.stream().anyMatch(e -> !e.isEmpty() && msg.startsWith(e))){
             try{
                 // Check if parameters are well formatted
                 Map<String, String> params = this.checkCommandArgs();
                 this.execute(params);
             } catch(MissingParameterException | MissingValueException | IncorrectValueException e) {
-                RequestBuffer.request(() -> {
-                    MessageBuilder builder = new MessageBuilder(this.event.getClient());
-                    builder.withChannel(this.event.getChannel());
-                    builder.withContent(e.getMessage() + "\n");
-                    this.formatHelp(builder);
-                    builder.send();
-                });
+                logger.error(e.getMessage(), e);
+                this.respond(e.getMessage() + "\n");
             } catch(Exception e){
                 logger.error(e.getMessage(), e);
-                RequestBuffer.request(() -> {
-                    MessageBuilder builder = new MessageBuilder(this.event.getClient());
-                    builder.withChannel(this.event.getChannel());
-                    builder.withContent("An error happened ! Check the logs or contact the devs ....").send();
-                });
+                this.respond("An error happened ! Check the logs or contact the devs ....");
             }
         }
     }
@@ -68,7 +59,7 @@ public abstract class AbstractBotCommand implements IListener<MessageReceivedEve
     }
 
     private Map<String, String> checkCommandArgs() throws MissingValueException, MissingParameterException, IncorrectValueException {
-        String cmdSent = this.event.getMessage().getContent();
+        String cmdSent = this.event.getMessage().getContent().orElse("");
         DiscoCommandParser parser = new DiscoCommandParser();
 
         return parser.parse(cmdSent, this.getParameters());
@@ -76,5 +67,9 @@ public abstract class AbstractBotCommand implements IListener<MessageReceivedEve
 
     public abstract void execute(Map<String, String> parameters);
 
-    public abstract void formatHelp(MessageBuilder builder);
+    public abstract void formatHelp();
+
+    public void respond(String msg) {
+        this.event.getMessage().getChannel().block().createMessage(msg).block();
+    }
 }
