@@ -8,8 +8,6 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.Lists;
-
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.DiscoCommandParser;
@@ -46,7 +44,7 @@ public abstract class AbstractBotCommand {
 
     private boolean commandShouldBeInvoked(String message) {
         String commandName = this.getClass().getAnnotation(Command.class).value();
-        ArrayList<String> aliases = Lists.newArrayList(this.getClass().getAnnotation(Command.class).aliases());
+        List<String> aliases = this.getCommandAliases();
         boolean messageUseAnyAlias = aliases.stream().anyMatch(e -> !e.isEmpty() && message.startsWith(e));
 
         return message.startsWith(commandName) || messageUseAnyAlias;
@@ -60,7 +58,7 @@ public abstract class AbstractBotCommand {
         return this.getClass().getAnnotation(Command.class).value();
     }
 
-    public List<String> getCommandAliasesShort() {
+    public List<String> getCommandAliases() {
         return Arrays.asList(this.getClass().getAnnotation(Command.class).aliases());
     }
 

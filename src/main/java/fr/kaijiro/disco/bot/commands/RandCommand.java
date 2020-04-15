@@ -7,9 +7,10 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.Parameter;
-import org.apache.commons.lang3.math.NumberUtils;
 
 @Command(value = "!rand", aliases = {"!roll"})
 public class RandCommand extends AbstractBotCommand {
@@ -32,7 +33,7 @@ public class RandCommand extends AbstractBotCommand {
     public void execute(Map<String, String> parameters) {
         String request = parameters.get("request");
 
-        if(NumberUtils.isNumber(request)) {
+        if (NumberUtils.isNumber(request) && Integer.parseInt(request) >= 1) {
             // Nombre boundary
             this.respond(1 + new Random().nextInt(Integer.parseInt(request)) + "");
         } else if (Arrays.stream(request.split("-")).allMatch(NumberUtils::isNumber)) {
@@ -40,7 +41,7 @@ public class RandCommand extends AbstractBotCommand {
             int from = Integer.parseInt(request.split("-")[0]);
             int to = Integer.parseInt(request.split("-")[1]);
             if (from > to) {
-                formatHelp();
+                this.formatHelp();
                 return;
             }
             this.respond(from + new Random().nextInt(to-from+1) + "");
@@ -49,24 +50,27 @@ public class RandCommand extends AbstractBotCommand {
             int x = Integer.parseInt(request.split("d")[0]);
             int n = Integer.parseInt(request.split("d")[1]);
             if (x <= 0 || n <= 0) {
-                formatHelp();
+                this.formatHelp();
                 return;
             }
             StringBuilder out = new StringBuilder();
             List<Integer> rolls = IntStream.range(0, x).map(e -> 1 + new Random().nextInt(n)).boxed().collect(Collectors.toList());
             for (int i = 0; i < rolls.size(); i++) {
-                out.append("Roll" + (i+1) + ":"+rolls.get(i)+"\n");
+                out.append("Dice").append(i+1).append(": ").append(rolls.get(i)).append("\n");
             }
-//            out.append("Total:"+rolls.stream().mapToInt(Integer::parseInt()).sum())
-//            this.respond(out);
+            out.append("Total: ").append(rolls.stream().mapToInt(Integer::intValue).sum());
+            this.respond(out.toString());
         } else {
-            formatHelp();
+            this.formatHelp();
         }
     }
 
     @Override
     public void formatHelp() {
-        // Todo: donner  les limites
-        this.respond("Commande permettant de générer un nombre aléatoire, utilisation : `!rand boundary` or `!rand from-to` or `!rand xdN` (x dice N)");
+        this.respond(
+                "**[" + this.getCommandNameShort() + "]** Commande permettant de générer un nombre aléatoire." +
+                "\n*Utilisation :* `" + this.getCommandNameShort() + " bound` *(bound>=1)* | `" + this.getCommandNameShort() + " from-to` *(from>=1 & to>=1)* | `" + this.getCommandNameShort() + " xdN` (x dice N)" +
+                (this.getCommandAliases().isEmpty() ? "" : "\n*Aliases :* `" + String.join("`, `", this.getCommandAliases())+ "`")
+        );
     }
 }

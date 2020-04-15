@@ -1,15 +1,16 @@
 package fr.kaijiro.disco.bot.commands;
 
-import fr.kaijiro.disco.bot.annotations.Command;
-import fr.kaijiro.disco.bot.commands.parameters.Parameter;
-import org.apache.commons.lang3.StringUtils;
-import org.reflections.Reflections;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.reflections.Reflections;
+
+import fr.kaijiro.disco.bot.annotations.Command;
+import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 
 @Command(value = "!help", aliases = {"!helpo"})
 public class HelpCommand extends AbstractBotCommand {
@@ -30,7 +31,7 @@ public class HelpCommand extends AbstractBotCommand {
                 .map(Command::value)
                 .collect(Collectors.toList());
 
-        if (getCommandAliasesShort().contains(this.event.getMessage().getContent().orElse(""))) {
+        if (this.getCommandAliases().contains(this.event.getMessage().getContent().orElse(""))) {
             // C POUR LE LULZ
             this.respond("Los commandos disponiblos sonos los suivantos (comme disent les espagnols :flag_es: ) : \n\n" + StringUtils.join(commandNames, "\n"));
         } else {
@@ -41,6 +42,9 @@ public class HelpCommand extends AbstractBotCommand {
 
     @Override
     public void formatHelp() {
-        this.respond("Commande donnant la liste des commandes disponnibles");
+        this.respond(
+                "**[" + this.getCommandNameShort() + "]** Commande donnant la liste des commandes disponnibles" +
+                (this.getCommandAliases().isEmpty() ? "" : "\n*Aliases :* `" + String.join("`, `", this.getCommandAliases())+ "`")
+        );
     }
 }

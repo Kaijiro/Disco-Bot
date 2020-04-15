@@ -49,6 +49,11 @@ public class HangmanCommand extends AbstractBotCommand {
             return;
         }
 
+        if ("help".equalsIgnoreCase(args[1])) {
+            this.formatHelp();
+            return;
+        }
+
         if (!args[1].equals(COMMAND_START) && !gameStarted && !args[1].equals(COMMAND_STATUS)) {
             this.handleStatusOption();
         }
@@ -86,7 +91,11 @@ public class HangmanCommand extends AbstractBotCommand {
 
     @Override
     public void formatHelp() {
-        this.respond("`" + this.getCommandNameShort() + " ( " + COMMAND_START + " | " + COMMAND_STATUS + " | " + COMMAND_FORFEIT + " | " + COMMAND_TRY + " + 1 letter | " + COMMAND_GUESS + " + your guess )`");
+        this.respond(
+                "**[" + this.getCommandNameShort() + "]** Commande pour faire une partie de pendu" +
+                "\n*Utilisation :* `" + this.getCommandNameShort() + " ( " + COMMAND_START + " | " + COMMAND_STATUS + " | " + COMMAND_FORFEIT + " | " + COMMAND_TRY + " + 1 letter | " + COMMAND_GUESS + " + your guess )`" +
+                (this.getCommandAliases().isEmpty() ? "" : "\n*Aliases :* `" + String.join("`, `", this.getCommandAliases())+ "`")
+        );
     }
 
     private void handleStartOption() {

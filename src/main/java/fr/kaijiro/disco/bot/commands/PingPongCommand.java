@@ -1,10 +1,10 @@
 package fr.kaijiro.disco.bot.commands;
 
-import fr.kaijiro.disco.bot.annotations.Command;
-import fr.kaijiro.disco.bot.commands.parameters.Parameter;
-
 import java.util.List;
 import java.util.Map;
+
+import fr.kaijiro.disco.bot.annotations.Command;
+import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 
 @Command(value = "!ping", aliases = {"!gnip"})
 public class PingPongCommand extends AbstractBotCommand {
@@ -27,11 +27,15 @@ public class PingPongCommand extends AbstractBotCommand {
         for(int i = 0 ; i < Integer.parseInt(parameters.get("times")) ; i++) {
             this.respond("Pong !");
         }
+
     }
 
     @Override
     public void formatHelp() {
-        this.respond("Pour utiliser cette commande voici le format à suivre : `!ping <times>`, `<times>` " +
-                "étant le nombre de fois que le bot doit répondre");
+        this.respond(
+                "**[" + this.getCommandNameShort() + "]** Commande pour pinger le bot." +
+                "\n*Utilisation :* `" + this.getCommandNameShort() + " <times>`, `<times>` étant le nombre de fois que le bot doit répondre" +
+                (this.getCommandAliases().isEmpty() ? "" : "\n*Aliases :* `" + String.join("`, `", this.getCommandAliases())+ "`")
+        );
     }
 }
