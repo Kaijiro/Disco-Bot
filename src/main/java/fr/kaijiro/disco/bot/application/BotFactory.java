@@ -26,7 +26,8 @@ public class BotFactory {
             new HangmanCommand(),
             new PingPongCommand(),
             new HelpCommand(),
-            new RandCommand()
+            new RandCommand(),
+            new DTCommand()
     );
 
     public static DiscordClient buildBot() {

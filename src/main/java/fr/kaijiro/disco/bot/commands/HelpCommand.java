@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Command("!help")
+@Command(value = "!help", aliases = {"!helpo"})
 public class HelpCommand extends AbstractBotCommand {
 
     @Override
@@ -30,7 +30,13 @@ public class HelpCommand extends AbstractBotCommand {
                 .map(Command::value)
                 .collect(Collectors.toList());
 
-        this.respond("Les commandes disponibles sont les suivantes : \n\n" + StringUtils.join(commandNames, "\n"));
+        if (getCommandAliasesShort().contains(this.event.getMessage().getContent().orElse(""))) {
+            // C POUR LE LULZ
+            this.respond("Los commandos disponiblos sonos los suivantos (comme disent les espagnols :flag_es: ) : \n\n" + StringUtils.join(commandNames, "\n"));
+        } else {
+            this.respond("Les commandes disponibles sont les suivantes : \n\n" + StringUtils.join(commandNames, "\n"));
+        }
+
     }
 
     @Override

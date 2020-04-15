@@ -44,7 +44,6 @@ public class HangmanCommand extends AbstractBotCommand {
         String message = this.event.getMessage().getContent().orElse("").toLowerCase();
         String[] args = message.split(" ");
 
-
         if (args.length < 2) {
             this.handleErrorNbArgs();
             return;

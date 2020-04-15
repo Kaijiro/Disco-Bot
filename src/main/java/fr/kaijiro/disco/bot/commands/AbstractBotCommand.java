@@ -1,6 +1,7 @@
 package fr.kaijiro.disco.bot.commands;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,10 @@ public abstract class AbstractBotCommand {
 
     public String getCommandNameShort() {
         return this.getClass().getAnnotation(Command.class).value();
+    }
+
+    public List<String> getCommandAliasesShort() {
+        return Arrays.asList(this.getClass().getAnnotation(Command.class).aliases());
     }
 
     private Map<String, String> checkCommandArgs() throws MissingValueException, MissingParameterException, IncorrectValueException {
