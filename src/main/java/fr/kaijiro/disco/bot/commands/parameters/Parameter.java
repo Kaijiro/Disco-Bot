@@ -2,6 +2,9 @@ package fr.kaijiro.disco.bot.commands.parameters;
 
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class Parameter {
     private String name;
 
@@ -16,7 +19,7 @@ public class Parameter {
     private Class<?> waitedType = String.class;
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public Parameter setName(String name) {
@@ -26,7 +29,7 @@ public class Parameter {
     }
 
     public boolean hasArg() {
-        return hasArg;
+        return this.hasArg;
     }
 
     public Parameter hasArg(boolean hasArg) {
@@ -36,17 +39,17 @@ public class Parameter {
     }
 
     public boolean isOptional() {
-        return isOptional;
+        return this.isOptional;
     }
 
     public Parameter isOptional(boolean optional) {
-        isOptional = optional;
+        this.isOptional = optional;
 
         return this;
     }
 
     public String getDefaultValue() {
-        return defaultValue;
+        return this.defaultValue;
     }
 
     public void setDefaultValue(String defaultValue) {
@@ -64,7 +67,7 @@ public class Parameter {
     }
 
     public Class<?> getWaitedType() {
-        return waitedType;
+        return this.waitedType;
     }
 
     public Parameter waitedType(Class<?> waitedType) {
@@ -78,5 +81,25 @@ public class Parameter {
         parameter.setName(name);
 
         return parameter;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || this.getClass() != o.getClass()) return false;
+
+        Parameter parameter = (Parameter) o;
+
+        return new EqualsBuilder()
+                .append(this.name, parameter.name)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(this.name)
+                .toHashCode();
     }
 }

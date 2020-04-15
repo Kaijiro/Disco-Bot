@@ -1,6 +1,14 @@
 package fr.kaijiro.disco.bot.commands;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Lists;
+
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import fr.kaijiro.disco.bot.annotations.Command;
 import fr.kaijiro.disco.bot.commands.parameters.DiscoCommandParser;
@@ -8,12 +16,6 @@ import fr.kaijiro.disco.bot.commands.parameters.Parameter;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.IncorrectValueException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingParameterException;
 import fr.kaijiro.disco.bot.commands.parameters.exceptions.MissingValueException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public abstract class AbstractBotCommand {
 
@@ -26,16 +28,16 @@ public abstract class AbstractBotCommand {
 
         String message = event.getMessage().getContent().orElse("");
 
-        if (commandShouldBeInvoked(message)) {
+        if (this.commandShouldBeInvoked(message)) {
             try {
                 // Check if parameters are well formatted
                 Map<String, String> params = this.checkCommandArgs();
                 this.execute(params);
             } catch (MissingParameterException | MissingValueException | IncorrectValueException e) {
-                logger.error(e.getMessage());
+                this.logger.error(e.getMessage());
                 this.formatHelp();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                this.logger.error(e.getMessage(), e);
                 this.respond("An error happened ! Check the logs or contact the devs ....");
             }
         }
@@ -64,10 +66,10 @@ public abstract class AbstractBotCommand {
         return parser.parse(cmdSent, this.getParameters());
     }
 
-    public void respond(String msg) {
+    public void respond(String message) {
         this.event.getMessage()
                 .getChannel()
-                .subscribe(messageChannel -> messageChannel.createMessage(msg).subscribe());
+                .subscribe(messageChannel -> messageChannel.createMessage(message).subscribe());
     }
 
     public abstract void execute(Map<String, String> parameters);

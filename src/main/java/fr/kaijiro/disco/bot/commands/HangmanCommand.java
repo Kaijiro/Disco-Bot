@@ -1,18 +1,19 @@
 package fr.kaijiro.disco.bot.commands;
 
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import fr.kaijiro.disco.bot.annotations.Command;
-import org.apache.commons.lang3.StringUtils;
-
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Command(value = "!hangman", aliases = {"!pendu"})
+import org.apache.commons.lang3.StringUtils;
+
+import fr.kaijiro.disco.bot.annotations.Command;
+
+@Command(value = "!hangman", aliases = {"!pendu", "!hg"})
 public class HangmanCommand extends AbstractBotCommand {
 
     public static final String SPACE = " ";
@@ -24,6 +25,10 @@ public class HangmanCommand extends AbstractBotCommand {
     private static final String COMMAND_TRY = "try";
 
     private static final String COMMAND_GUESS = "guess";
+
+    private static final String COMMAND_FORFEIT = "forfeit";
+    private static final String COMMAND_FORFAIT = "forfait";
+    private static final String COMMAND_FF = "ff";
 
     private String wordToGuess = "";
 
@@ -41,48 +46,54 @@ public class HangmanCommand extends AbstractBotCommand {
 
 
         if (args.length < 2) {
-            this.handleErrorNbArgs(this.event);
+            this.handleErrorNbArgs();
             return;
         }
 
-        if (!args[1].equals(COMMAND_START) && !gameStarted) {
-            this.handleStatusOption(this.event);
+        if (!args[1].equals(COMMAND_START) && !gameStarted && !args[1].equals(COMMAND_STATUS)) {
+            this.handleStatusOption();
         }
 
         switch (args[1]) {
             case COMMAND_START:
-                this.handleStartOption(this.event);
+                this.handleStartOption();
                 break;
 
             case COMMAND_STATUS:
-                this.handleStatusOption(this.event);
+                this.handleStatusOption();
                 break;
 
             case COMMAND_TRY:
                 if (args.length < 3) {
-                    this.handleErrorNbArgs(this.event);
+                    this.handleErrorNbArgs();
                     return;
                 } else {
-                    this.handleTryOption(this.event, args[2]);
+                    this.handleTryOption(Arrays.copyOfRange(args,2, args.length));
                 }
                 break;
             case COMMAND_GUESS:
-                this.handleGuessOption(this.event, args);
+                this.handleGuessOption(args);
+                break;
+            case COMMAND_FORFEIT:
+            case COMMAND_FORFAIT:
+            case COMMAND_FF:
+                this.handleForfait();
                 break;
             default:
-                this.handleErrorNbArgs(this.event);
+                this.handleErrorNbArgs();
                 return;
         }
     }
 
     @Override
     public void formatHelp() {
+        this.respond("`" + this.getCommandNameShort() + " ( " + COMMAND_START + " | " + COMMAND_STATUS + " | " + COMMAND_FORFEIT + " | " + COMMAND_TRY + " + 1 letter | " + COMMAND_GUESS + " + your guess )`");
     }
 
-    private void handleStartOption(MessageCreateEvent event) {
+    private void handleStartOption() {
         if (gameStarted) {
             this.respond("A game is already started !\n" +
-                    "Type " + COMMAND_STATUS + " to display letters tryed and current game status.");
+                    "Type " + COMMAND_STATUS + " to display current game status.");
         } else {
             do {
                 this.wordToGuess = this.getNewWordToGuess();
@@ -96,7 +107,7 @@ public class HangmanCommand extends AbstractBotCommand {
         }
     }
 
-    private void handleStatusOption(MessageCreateEvent event) {
+    private void handleStatusOption() {
         String content;
 
         if (gameStarted) {
@@ -109,75 +120,84 @@ public class HangmanCommand extends AbstractBotCommand {
         this.respond(content);
     }
 
-    private void handleTryOption(MessageCreateEvent event, String try_) {
-        Pattern pattern = Pattern.compile("^[a-z1-9]$");
-        Matcher matcher = pattern.matcher(try_);
+    private void handleTryOption(String... tentatives) {
+        if(gameStarted) {
+            Pattern pattern = Pattern.compile("^[a-z1-9]$");
 
-        String content;
+            for (String tentative : tentatives) {
+                Matcher matcher = pattern.matcher(tentative);
 
-        if (matcher.find()) { // It is a letter or a number
-            content = "You tried : " + try_;
-            if (triedLetters.contains(try_)) { // If user already tried this letter/number
-                content += "\n" + "Unfortunately it was already used. -1 live";
-                this.livesLeft -= 1;
-            } else if (!this.wordToGuess.contains(try_)) { // If the letter/number is not in the word to try_
-                content += "\n" + "Unfortunatly it is not in the word to guess !";
-                triedLetters.add(try_);
-                this.livesLeft -= 1;
+                String content;
 
-            } else { // If the letter/number is in the word to try_
-                triedLetters.add(try_);
+                if (matcher.find()) { // It is a letter or a number
+                    content = "You tried : " + tentative;
+                    if (triedLetters.contains(tentative)) { // If user already tried this letter/number
+                        content += "\n" + "Unfortunately it was already used. -1 live";
+                        this.livesLeft -= 1;
+                    } else if (!this.wordToGuess.contains(tentative)) { // If the letter/number is not in the word to try_
+                        content += "\n" + "Unfortunatly it is not in the word to guess !";
+                        triedLetters.add(tentative);
+                        this.livesLeft -= 1;
+
+                    } else { // If the letter/number is in the word to try_
+                        triedLetters.add(tentative);
+                    }
+                    content += "\n" + this.getGameStatus();
+                } else { // Not a letter or a number
+                    this.livesLeft -= 1;
+                    content = "Error, expecting a letter or a number ! -1 live \n" + this.getGameStatus();
+                }
+
+                if (this.testIfFoundWord()) { // Check if user found the word
+                    content += "\n" + "Congratulation ! You found the word " + this.wordToGuess;
+
+                    gameStarted = false;
+                }
+
+                this.respond(content);
+
+                if (this.livesLeft == 0) { // Game lost - No lives left
+                    this.handleGameLost();
+                }
+
             }
-            content += "\n" + this.getGameStatus();
-        } else { // Not a letter or a number
-            this.livesLeft -= 1;
-            content = "Error, expecting a letter or a number ! -1 live \n" + this.getGameStatus();
-        }
-
-        if (this.testIfFoundWord()) { // Check if user found the word
-            content += "\n" + "Congratulation ! You found the word " + this.wordToGuess;
-            gameStarted = false;
-        }
-
-        this.respond(content);
-
-        if (this.livesLeft == 0) { // Game lost - No lives left
-            this.handleGameLost(event);
         }
     }
 
-    private void handleGuessOption(MessageCreateEvent event, String[] args) {
-        String guess = "";
-        for (int i = 2; i < args.length; i++) {
-            guess += args[i] + SPACE;
-        }
-        guess = guess.trim();
+    private void handleGuessOption(String[] args) {
+        if(gameStarted) {
+            String guess = "";
+            for (int i = 2; i < args.length; i++) {
+                guess += args[i] + SPACE;
+            }
+            guess = guess.trim();
 
-        String content;
-        if (this.wordToGuess.equals(guess)) {
-            content = "Congratulations, you guessed the word " + this.wordToGuess;
-            gameStarted = false;
-        } else {
-            content = "Humm no, the word to guess is not " + guess + "... -1 live";
-            this.livesLeft -= 1;
-        }
+            String content;
+            if (this.wordToGuess.equals(guess)) {
+                content = "Congratulations, you guessed the word " + this.wordToGuess;
+                gameStarted = false;
+            } else {
+                content = "Humm no, the word to guess is not " + guess + "... -1 live";
+                this.livesLeft -= 1;
+            }
 
-        this.respond(content);
+            this.respond(content);
 
-        if (this.livesLeft == 0) { // Game lost - No lives left
-            this.handleGameLost(event);
+            if (this.livesLeft == 0) { // Game lost - No lives left
+                this.handleGameLost();
+            }
         }
     }
 
-    private void handleErrorNbArgs(MessageCreateEvent event) {
+    private void handleErrorNbArgs() {
         this.respond(":warning:  Error, to play a Hangman game, I wait 2 parameters ! :warning: \n\n" +
-                "`" + this.getCommandNameShort() + " ( " + COMMAND_START + " | " + COMMAND_STATUS + " | " + COMMAND_TRY + " + 1 letter | " + COMMAND_GUESS + " + your guess )`\n\n" +
+                "`" + this.getCommandNameShort() + " ( " + COMMAND_START + " | " + COMMAND_STATUS + " | " + COMMAND_FORFEIT + " | " + COMMAND_TRY + " + 1 letter | " + COMMAND_GUESS + " + your guess )`\n\n" +
                 "Try again ! :wink:");
     }
 
-    private void handleGameLost(MessageCreateEvent event) {
+    private void handleGameLost() {
         String content = "No more life left !\n" +
-                "You have not guessed the word " + this.wordToGuess + "\n" +
+                "You have not guessed the word **" + this.wordToGuess + "**\n" +
                 "You used those letters : ";
         for (String s : triedLetters) {
             content += s + " ";
@@ -187,6 +207,22 @@ public class HangmanCommand extends AbstractBotCommand {
         gameStarted = false;
 
         this.respond(content);
+    }
+
+    private void handleForfait() {
+        if(gameStarted) {
+            String content = "You forfeited...\n" +
+                    "The word was **" + this.wordToGuess + "**\n" +
+                    "You used those letters : ";
+            for (String s : triedLetters) {
+                content += s + " ";
+            }
+            content += "\n" + "Start a new game with `" + this.getCommandNameShort() + " " + COMMAND_START + "` !";
+
+            gameStarted = false;
+
+            this.respond(content);
+        }
     }
 
     private boolean testIfFoundWord() {
@@ -203,32 +239,32 @@ public class HangmanCommand extends AbstractBotCommand {
         try {
             out = correctWord(this.sendGet());
         } catch (Exception e) {
-            logger.error("Error while getting the new word to guess", e);
+            this.logger.error("Error while getting the new word to guess", e);
         }
 
-        logger.debug("The word to guess is : " + out);
+		this.logger.debug("The word to guess is : {}", out);
 
         return out;
     }
 
     public String getGameStatus() {
-        return "Live" + (this.livesLeft > 1 ? "s" : "") + " left : " + this.livesLeft + "\n" +
+        return "Live" + (this.livesLeft > 1 ? "s" : "") + " left : " + StringUtils.repeat(":heart: ", this.livesLeft) + "\n" +
                 this.getWordToGuessForDisplay();
     }
 
     public String getWordToGuessForDisplay() {
-        String out = "";
+        StringBuilder out = new StringBuilder();
 
         for (String s : this.wordToGuess.split("")) {
             if (triedLetters.contains(s)) {
-                out += s;
+				out.append(s);
             } else {
-                out += "#";
+				out.append("#");
             }
-            out += " ";
+            out.append(" ");
         }
 
-        return out.toUpperCase();
+        return out.toString().toUpperCase();
     }
 
     private String sendGet() throws Exception {
@@ -240,15 +276,15 @@ public class HangmanCommand extends AbstractBotCommand {
         String redirectLocation = connection.getHeaderField("Location");
 
         String out = redirectLocation.replace("https://fr.wikipedia.org/wiki/", "");
-        logger.debug("Page wiki : " + out);
+        this.logger.debug("Page wiki : {}", out);
         return out;
     }
 
     private static String correctWord(String s) {
         s = s.toLowerCase();
         s = StringUtils.stripAccents(s);
-        s = s.replaceAll("_", SPACE);
-        s = s.replaceAll("\\(.*?\\)", "");
+        s = s.replace("_", SPACE);
+        s = s.replace("\\(.*?\\)", "");
         s = s.trim();
         return s;
     }

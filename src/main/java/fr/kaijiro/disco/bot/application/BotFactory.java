@@ -1,5 +1,11 @@
 package fr.kaijiro.disco.bot.application;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -7,11 +13,6 @@ import fr.kaijiro.disco.bot.commands.*;
 import fr.kaijiro.disco.bot.configuration.DiscoBotOption;
 import fr.kaijiro.disco.bot.configuration.SystemEnv;
 import fr.kaijiro.disco.bot.configuration.exceptions.ValueNotSetException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class BotFactory {
     private String token;
@@ -24,7 +25,8 @@ public class BotFactory {
             new ConfigCommand(),
             new HangmanCommand(),
             new PingPongCommand(),
-            new HelpCommand()
+            new HelpCommand(),
+            new RandCommand()
     );
 
     public static DiscordClient buildBot() {
@@ -50,7 +52,7 @@ public class BotFactory {
     }
 
     private void registerCommandsAndListeners() {
-        botCommands.forEach(command -> this.botInstance.getEventDispatcher().on(MessageCreateEvent.class)
+        this.botCommands.forEach(command -> this.botInstance.getEventDispatcher().on(MessageCreateEvent.class)
                 .subscribe(command::handle));
     }
 
