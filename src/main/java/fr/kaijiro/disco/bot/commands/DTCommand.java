@@ -1,25 +1,28 @@
 package fr.kaijiro.disco.bot.commands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.kaijiro.disco.bot.annotations.Command;
-import org.apache.commons.lang3.StringEscapeUtils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.kaijiro.disco.bot.annotations.Command;
+import fr.kaijiro.disco.bot.model.ChuckFact;
 
 @Command(value = "!dt", aliases = {})
 public class DTCommand extends AbstractBotCommand {
 
+    public static final String CHUCK_NORRIS_FACTS_URL = "http://www.chucknorrisfacts.fr/api/get?data=nb:1;type:txt;tri:alea";
+
     @Override
     public void execute(Map<String, String> parameters) {
-        this.respond(getFactFromApi().replace("Chuck Norris", "DayTay"));
+        this.respond(this.getFactFromApi().replace("Chuck Norris", "DayTay"));
     }
 
     @Override
@@ -28,21 +31,20 @@ public class DTCommand extends AbstractBotCommand {
     }
 
     private String getFactFromApi() {
-        String location = "https://www.chucknorrisfacts.fr/api/get?data=nb:1;type:txt;tri:alea";
-        String fact = null;
+        String fact;
 
         try {
-            URL url = new URL(location);
+            URL url = new URL(CHUCK_NORRIS_FACTS_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("GET");
 
-            String httpResponseContent = getHttpResponseContent(connection);
-            fact = getChuckFact(httpResponseContent);
+            String httpResponseContent = this.getHttpResponseContent(connection);
+            fact = this.getChuckFact(httpResponseContent);
 
             connection.disconnect();
         } catch (Exception e) {
-            logger.debug(e.getMessage());
+            this.logger.debug(e.getMessage(),e);
             return "Erreur lors de la récupération du fact";
         }
 
@@ -76,53 +78,3 @@ public class DTCommand extends AbstractBotCommand {
         return StringEscapeUtils.unescapeHtml4(content.toString());
     }
 }
-
-class ChuckFact {
-    private String id;
-    private String fact;
-    private Date date;
-    private int vote;
-    private int points;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getFact() {
-        return fact;
-    }
-
-    public void setFact(String fact) {
-        this.fact = fact;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public int getVote() {
-        return vote;
-    }
-
-    public void setVote(int vote) {
-        this.vote = vote;
-    }
-
-    public int getPoints() {
-        return points;
-    }
-
-    public void setPoints(int points) {
-        this.points = points;
-    }
-}
-
-// https://www.chucknorrisfacts.fr/api/get?data=nb:1;type:txt

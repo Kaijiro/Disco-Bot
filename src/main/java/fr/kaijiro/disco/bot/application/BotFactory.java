@@ -27,7 +27,8 @@ public class BotFactory {
             new PingPongCommand(),
             new HelpCommand(),
             new RandCommand(),
-            new DTCommand()
+            new DTCommand(),
+            new SongRequestCommand()
     );
 
     public static DiscordClient buildBot() {
